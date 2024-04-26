@@ -1,6 +1,7 @@
 ﻿using Assignment_2;
 using Assignment_2.ExerciseOne;
 using Assignment_2.ExerciseTwo;
+using System.Diagnostics;
 
 while (true)
 {
@@ -72,11 +73,22 @@ async void ExerciseTwo()
     {
         Utils.DisplayExerciseTwo();
         var range = Number.InputRange();
-        var primes = await Number.GetPrimesAsync(range.min, range.max);
-        foreach(var prime in primes)
-        {
-            await Console.Out.WriteLineAsync(prime.ToString());
-        }
+
+        // Track time
+        var watch = new Stopwatch();
+        watch.Start();
+        var primesAsync = await Number.GetPrimesAsync(range.start, range.end);
+        watch.Stop();
+        await Console.Out.WriteLineAsync($"Async method took {watch.ElapsedMilliseconds} milliseconds.");
+        
+        watch.Restart();
+        var primesSync = Number.GetPrimesSync(range.start, range.end);
+        watch.Stop();
+        await Console.Out.WriteLineAsync($"Sync method took {watch.ElapsedMilliseconds} milliseconds.");
+        //foreach (var prime in primesAsync)
+        //{
+        //    await Console.Out.WriteAsync($"{prime}, ");
+        //}
     }
 }
 

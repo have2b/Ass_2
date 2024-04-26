@@ -2,10 +2,10 @@
 {
     public class Number
     {
-        public static (uint min, uint max) InputRange()
+        public static (uint start, uint end) InputRange()
         {
-            uint min,
-                max;
+            uint start,
+                end;
 
             while (true)
             {
@@ -17,7 +17,7 @@
                     continue;
                 }
 
-                if (!uint.TryParse(input, out min))
+                if (!uint.TryParse(input, out start))
                 {
                     Console.WriteLine("Invalid input! Input must not be a negative integer!");
                     continue;
@@ -35,12 +35,12 @@
                     continue;
                 }
 
-                if (!uint.TryParse(input, out max))
+                if (!uint.TryParse(input, out end))
                 {
                     Console.WriteLine("Input must not be a negative integer!");
                     continue;
                 }
-                if (max <= min)
+                if (end <= start)
                 {
                     Console.WriteLine("Max must greater than min");
                     continue;
@@ -48,34 +48,77 @@
                 break;
             }
 
-            return (min, max);
+            return (start, end);
         }
 
-        public static async Task<List<uint>> GetPrimesAsync(uint min, uint max)
+        public static async Task<List<uint>> GetPrimesAsync(uint start, uint end)
+        {
+            var primeTasks = new List<Task<uint?>>();
+
+            for (uint i = start; i <= end; i++)
+            {
+                primeTasks.Add(IsPrimeAsync(i));
+            }
+
+            var results = await Task.WhenAll(primeTasks);
+            var primes = results.Where(r => r.HasValue).Select(r => r.Value).ToList();
+
+            return primes;
+        }
+
+        static async Task<uint?> IsPrimeAsync(uint number)
+        {
+            if (number <= 1)
+                return null;
+
+            bool isPrime = true;
+            for (int i = 2; i <= Math.Sqrt(number); i++)
+            {
+                if (number % i == 0)
+                {
+                    isPrime = false;
+                    break;
+                }
+            }
+
+            return isPrime ? number : null;
+        }
+
+        public static List<uint> GetPrimesSync(uint start, uint end)
         {
             List<uint> primes = new List<uint>();
-            for (uint i = min; i <= max; i++)
+
+            for (uint i = start; i <= end; i++)
             {
-                if (IsPrime(i))
-                    primes.Add(i);
+                IsPrimeSync(i, primes);
             }
 
             return primes;
         }
 
-        private static bool IsPrime(uint number)
+        static void IsPrimeSync(uint number, List<uint> primes)
         {
             if (number <= 1)
-                return false;
+                return;
 
-            for (uint i = 2; i < Math.Sqrt(number); i++)
+            bool isPrime = true;
+            for (int i = 2; i <= Math.Sqrt(number); i++)
             {
                 if (number % i == 0)
                 {
-                    return false;
+                    isPrime = false;
+                    break;
                 }
             }
-            return true;
+
+            if (isPrime)
+            {
+                lock (primes)
+                {
+                    primes.Add(number);
+                }
+            }
         }
+
     }
 }
